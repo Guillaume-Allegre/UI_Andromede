@@ -12,12 +12,16 @@ import 'reactflow/dist/style.css';
 import { ActorNode } from './nodes/actor-node';
 import { ToolNode } from './nodes/tool-node';
 import { OrchestratorNode } from './nodes/orchestrator-node';
+import { TriggerNode } from './nodes/trigger-node';
+import { RewardNode } from './nodes/reward-node';
 import { useWorkflowStore } from '@/store/workflow-store';
 
 const nodeTypes = {
   actor: ActorNode,
   tool: ToolNode,
   orchestrator: OrchestratorNode,
+  trigger: TriggerNode,
+  reward: RewardNode,
 };
 
 function Flow() {
@@ -54,7 +58,6 @@ function Flow() {
         className="bg-gray-50"
       >
         <Background 
-          variant="dots" 
           gap={20} 
           size={1}
           color="#e5e7eb"

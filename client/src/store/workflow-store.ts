@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Node, Edge, addEdge, applyNodeChanges, applyEdgeChanges, Connection } from 'reactflow';
-import type { NodeData, SimulationMetrics } from '@/types/workflow';
+import type { NodeData, SimulationMetrics, NodeType } from '@/types/workflow';
 
 interface WorkflowState {
   // Canvas state
@@ -13,6 +13,8 @@ interface WorkflowState {
   isSimulationRunning: boolean;
   showSimulationModal: boolean;
   simulationResults: any;
+  showAddComponentModal: boolean;
+  addComponentType: NodeType | null;
   
   // Sidebar state
   expandedSections: string[];
@@ -29,6 +31,8 @@ interface WorkflowState {
   setSimulationRunning: (running: boolean) => void;
   setShowSimulationModal: (show: boolean) => void;
   setSimulationResults: (results: any) => void;
+  setShowAddComponentModal: (show: boolean) => void;
+  setAddComponentType: (type: NodeType | null) => void;
   
   toggleSection: (section: string) => void;
   
@@ -172,6 +176,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   isSimulationRunning: false,
   showSimulationModal: false,
   simulationResults: null,
+  showAddComponentModal: false,
+  addComponentType: null,
   expandedSections: ['environments', 'agents'],
   
   // Canvas actions
@@ -203,6 +209,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   setSimulationRunning: (running) => set({ isSimulationRunning: running }),
   setShowSimulationModal: (show) => set({ showSimulationModal: show }),
   setSimulationResults: (results) => set({ simulationResults: results }),
+  setShowAddComponentModal: (show) => set({ showAddComponentModal: show }),
+  setAddComponentType: (type) => set({ addComponentType: type }),
   
   toggleSection: (section) => {
     const { expandedSections } = get();
