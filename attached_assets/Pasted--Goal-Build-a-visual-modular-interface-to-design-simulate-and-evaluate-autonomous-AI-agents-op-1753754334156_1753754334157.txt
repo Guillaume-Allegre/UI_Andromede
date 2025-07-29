@@ -1,0 +1,73 @@
+🧭 Goal:
+Build a visual, modular interface to design, simulate, and evaluate autonomous AI agents operating inside enterprise-grade workflows. Think “Figma meets Unity for AI agents.”
+
+🎯 Core Purpose
+Enable AI teams and domain experts to:
+
+Design complex agent workflows using drag-and-drop primitives.
+
+Simulate real-world enterprise scenarios (sales, HR, support).
+
+Train agents through interaction with simulated tools and humans.
+
+Evaluate performance using defined reward metrics — all within a closed loop.
+
+📐 Design Principles
+Modularity: Every scenario is composed of reusable components: actors, tools, triggers, rewards, and orchestrators.
+
+Visual-first: Intuitive flowchart-style canvas to define agent-environment interactions without code.
+
+No-code/low-code extensibility: Technical users can inject logic; non-technical users can build from templates.
+
+Realism-first: The UI must support complex enterprise workflows — including permissions, delays, parallel interactions, and conditional logic.
+
+🧩 Main Components to Build
+1. Environment Workspace
+Project navigator (e.g., "Helix") with folders like:
+
+Scenarios: end-to-end business processes
+
+Tools: APIs and interfaces (e.g., Salesforce, Gmail)
+
+Runs: simulation history
+
+Dashboard: analytics, performance, outcomes
+
+2. Scenario Builder Canvas
+Node-based editor with:
+
+Actors: Human, Agent, Orchestrator
+
+Tools: External systems (Calendar, CRM, DB)
+
+Triggers: Events that start agent actions
+
+Rewards: Success conditions (e.g., meeting booked)
+
+Connections (edges) define data flow or control logic
+
+3. Agent Manager
+Configure agent backends (e.g., OpenAI, custom LLM)
+
+Define memory, tools access, permissions
+
+Run evaluations, analyze performance
+
+Simulate behavior with real-world inputs
+
+4. Simulation & Feedback
+Trigger and observe simulated runs
+
+Collect data: conversation logs, success metrics, trace graphs
+
+Replay & debug agent behavior
+
+Export results for RL training or benchmarking
+
+📦 Core Entities
+Entity	Description
+Actor	Can be AI (agent), human (customer), or orchestrator
+Tool	API, interface, or environment service the agent uses
+Trigger	Events that launch interactions (time, action, signal)
+Reward	Task outcome metrics to train/evaluate the agent
+Scenario	Composition of actors/tools/rewards that define a ta
