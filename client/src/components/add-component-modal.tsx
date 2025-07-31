@@ -110,7 +110,11 @@ export function AddComponentModal({ isOpen, onClose, componentType }: AddCompone
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submitted with data:', formData);
+    console.log('Component type:', componentType);
+    
     if (!formData.name || !formData.type) {
+      console.log('Validation failed - missing name or type');
       return; // Basic validation
     }
 
@@ -147,7 +151,9 @@ export function AddComponentModal({ isOpen, onClose, componentType }: AddCompone
       data: nodeData
     };
 
+    console.log('About to add node:', newNode);
     addNode(newNode);
+    console.log('Node added successfully');
 
     // Reset form and close modal
     setFormData({
