@@ -2,10 +2,15 @@ import { create } from 'zustand';
 import { Node, Edge, addEdge, applyNodeChanges, applyEdgeChanges, Connection } from 'reactflow';
 import type { NodeData, SimulationMetrics, NodeType } from '@/types/workflow';
 
-interface WorkflowState {
-  // Canvas state
+interface CanvasData {
   nodes: Node<NodeData>[];
   edges: Edge[];
+}
+
+interface WorkflowState {
+  // Canvas state - now per environment
+  canvases: Record<string, CanvasData>;
+  currentEnvironmentId: string;
   selectedNode: Node<NodeData> | null;
   
   // UI state
@@ -35,13 +40,21 @@ interface WorkflowState {
   // Sidebar state
   expandedSections: string[];
   
-  // Actions
+  // Canvas actions
   setNodes: (nodes: Node<NodeData>[]) => void;
   setEdges: (edges: Edge[]) => void;
   onNodesChange: (changes: any) => void;
   onEdgesChange: (changes: any) => void;
   onConnect: (connection: Connection) => void;
   setSelectedNode: (node: Node<NodeData> | null) => void;
+  
+  // Environment actions
+  setCurrentEnvironment: (environmentId: string) => void;
+  getCurrentCanvas: () => CanvasData;
+  
+  // Computed properties
+  nodes: Node<NodeData>[];
+  edges: Edge[];
   
   setActiveTab: (tab: string) => void;
   setSimulationRunning: (running: boolean) => void;
@@ -81,132 +94,138 @@ interface WorkflowState {
   runSimulation: () => Promise<void>;
 }
 
-const initialNodes: Node<NodeData>[] = [
-  {
-    id: 'customer',
-    type: 'actor',
-    position: { x: 280, y: 160 },
-    data: {
-      name: 'Customer',
-      description: 'Human Actor',
-      actorType: 'human',
-      icon: 'user',
-      color: 'blue'
+// Default canvas data for production environment
+const productionCanvasData: CanvasData = {
+  nodes: [
+    {
+      id: 'customer',
+      type: 'actor',
+      position: { x: 280, y: 160 },
+      data: {
+        name: 'Customer',
+        description: 'Human Actor',
+        actorType: 'human',
+        icon: 'user',
+        color: 'blue'
+      }
+    },
+    {
+      id: 'sales-agent',
+      type: 'actor',
+      position: { x: 520, y: 220 },
+      data: {
+        name: 'Sales Agent',
+        description: 'AI Actor',
+        actorType: 'agent',
+        icon: 'robot',
+        color: 'gray'
+      }
+    },
+    {
+      id: 'orchestrator',
+      type: 'orchestrator',
+      position: { x: 680, y: 320 },
+      data: {
+        name: 'Orchestrator',
+        description: 'System',
+        actorType: 'system',
+        icon: 'cogs',
+        color: 'gray'
+      }
+    },
+    {
+      id: 'outlook',
+      type: 'tool',
+      position: { x: 680, y: 80 },
+      data: {
+        name: 'Outlook',
+        description: 'Email Tool',
+        toolType: 'outlook',
+        icon: 'envelope',
+        color: 'blue'
+      }
+    },
+    {
+      id: 'calendar',
+      type: 'tool',
+      position: { x: 880, y: 130 },
+      data: {
+        name: 'Calendar',
+        description: 'Scheduling Tool',
+        toolType: 'calendar',
+        icon: 'calendar',
+        color: 'green'
+      }
+    },
+    {
+      id: 'salesforce',
+      type: 'tool',
+      position: { x: 480, y: 350 },
+      data: {
+        name: 'SalesForce',
+        description: 'CRM Tool',
+        toolType: 'salesforce',
+        icon: 'cloud',
+        color: 'green'
+      }
+    },
+    {
+      id: 'openai',
+      type: 'tool',
+      position: { x: 260, y: 320 },
+      data: {
+        name: 'OpenAI',
+        description: 'LLM Provider',
+        toolType: 'openai',
+        icon: 'brain',
+        color: 'gray'
+      }
+    },
+    {
+      id: 'sales-team',
+      type: 'actor',
+      position: { x: 920, y: 350 },
+      data: {
+        name: 'Sales Team',
+        description: 'Human Group',
+        actorType: 'human',
+        icon: 'users',
+        color: 'blue'
+      }
+    },
+    {
+      id: 'sales-manager',
+      type: 'actor',
+      position: { x: 860, y: 430 },
+      data: {
+        name: 'Sales Manager',
+        description: 'Human Supervisor',
+        actorType: 'human',
+        icon: 'user-tie',
+        color: 'blue'
+      }
     }
-  },
-  {
-    id: 'sales-agent',
-    type: 'actor',
-    position: { x: 520, y: 220 },
-    data: {
-      name: 'Sales Agent',
-      description: 'AI Actor',
-      actorType: 'agent',
-      icon: 'robot',
-      color: 'gray'
-    }
-  },
-  {
-    id: 'orchestrator',
-    type: 'orchestrator',
-    position: { x: 680, y: 320 },
-    data: {
-      name: 'Orchestrator',
-      description: 'System',
-      actorType: 'system',
-      icon: 'cogs',
-      color: 'gray'
-    }
-  },
-  {
-    id: 'outlook',
-    type: 'tool',
-    position: { x: 680, y: 80 },
-    data: {
-      name: 'Outlook',
-      description: 'Email Tool',
-      toolType: 'outlook',
-      icon: 'envelope',
-      color: 'blue'
-    }
-  },
-  {
-    id: 'calendar',
-    type: 'tool',
-    position: { x: 880, y: 130 },
-    data: {
-      name: 'Calendar',
-      description: 'Scheduling Tool',
-      toolType: 'calendar',
-      icon: 'calendar',
-      color: 'green'
-    }
-  },
-  {
-    id: 'salesforce',
-    type: 'tool',
-    position: { x: 480, y: 350 },
-    data: {
-      name: 'SalesForce',
-      description: 'CRM Tool',
-      toolType: 'salesforce',
-      icon: 'cloud',
-      color: 'green'
-    }
-  },
-  {
-    id: 'openai',
-    type: 'tool',
-    position: { x: 260, y: 320 },
-    data: {
-      name: 'OpenAI',
-      description: 'LLM Provider',
-      toolType: 'openai',
-      icon: 'brain',
-      color: 'gray'
-    }
-  },
-  {
-    id: 'sales-team',
-    type: 'actor',
-    position: { x: 920, y: 350 },
-    data: {
-      name: 'Sales Team',
-      description: 'Human Group',
-      actorType: 'human',
-      icon: 'users',
-      color: 'blue'
-    }
-  },
-  {
-    id: 'sales-manager',
-    type: 'actor',
-    position: { x: 860, y: 430 },
-    data: {
-      name: 'Sales Manager',
-      description: 'Human Supervisor',
-      actorType: 'human',
-      icon: 'user-tie',
-      color: 'blue'
-    }
-  }
-];
+  ],
+  edges: [
+    { id: 'e1', source: 'customer', target: 'sales-agent' },
+    { id: 'e2', source: 'sales-agent', target: 'orchestrator' },
+    { id: 'e3', source: 'orchestrator', target: 'sales-manager' },
+    { id: 'e4', source: 'orchestrator', target: 'sales-team' },
+    { id: 'e5', source: 'outlook', target: 'sales-agent' },
+    { id: 'e6', source: 'calendar', target: 'sales-agent' },
+    { id: 'e7', source: 'salesforce', target: 'orchestrator' },
+    { id: 'e8', source: 'openai', target: 'sales-agent' }
+  ]
+};
 
-const initialEdges: Edge[] = [
-  { id: 'e1', source: 'customer', target: 'sales-agent' },
-  { id: 'e2', source: 'sales-agent', target: 'orchestrator' },
-  { id: 'e3', source: 'orchestrator', target: 'sales-manager' },
-  { id: 'e4', source: 'orchestrator', target: 'sales-team' },
-  { id: 'e5', source: 'outlook', target: 'sales-agent' },
-  { id: 'e6', source: 'calendar', target: 'sales-agent' },
-  { id: 'e7', source: 'salesforce', target: 'orchestrator' },
-  { id: 'e8', source: 'openai', target: 'sales-agent' }
-];
+// Initialize canvases for different environments
+// Note: These will be dynamically populated when environments are loaded
+const initialCanvases: Record<string, CanvasData> = {};
 
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   // Initial state
-  nodes: initialNodes,
-  edges: initialEdges,
+  canvases: initialCanvases,
+  currentEnvironmentId: '',
   selectedNode: null,
   activeTab: 'actors',
   isSimulationRunning: false,
@@ -226,29 +245,126 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
   expandedSections: ['environments', 'agents'],
   
+  // Computed properties
+  get nodes() {
+    const { canvases, currentEnvironmentId } = get();
+    return canvases[currentEnvironmentId]?.nodes || [];
+  },
+  
+  get edges() {
+    const { canvases, currentEnvironmentId } = get();
+    return canvases[currentEnvironmentId]?.edges || [];
+  },
+  
   // Canvas actions
-  setNodes: (nodes) => set({ nodes }),
-  setEdges: (edges) => set({ edges }),
+  setNodes: (nodes) => {
+    const { canvases, currentEnvironmentId } = get();
+    set({
+      canvases: {
+        ...canvases,
+        [currentEnvironmentId]: {
+          ...canvases[currentEnvironmentId],
+          nodes
+        }
+      }
+    });
+  },
+  
+  setEdges: (edges) => {
+    const { canvases, currentEnvironmentId } = get();
+    set({
+      canvases: {
+        ...canvases,
+        [currentEnvironmentId]: {
+          ...canvases[currentEnvironmentId],
+          edges
+        }
+      }
+    });
+  },
   
   onNodesChange: (changes) => {
+    const { canvases, currentEnvironmentId } = get();
+    const currentCanvas = canvases[currentEnvironmentId];
+    if (!currentCanvas) return;
+    
+    const updatedNodes = applyNodeChanges(changes, currentCanvas.nodes);
     set({
-      nodes: applyNodeChanges(changes, get().nodes)
+      canvases: {
+        ...canvases,
+        [currentEnvironmentId]: {
+          ...currentCanvas,
+          nodes: updatedNodes
+        }
+      }
     });
   },
   
   onEdgesChange: (changes) => {
+    const { canvases, currentEnvironmentId } = get();
+    const currentCanvas = canvases[currentEnvironmentId];
+    if (!currentCanvas) return;
+    
+    const updatedEdges = applyEdgeChanges(changes, currentCanvas.edges);
     set({
-      edges: applyEdgeChanges(changes, get().edges)
+      canvases: {
+        ...canvases,
+        [currentEnvironmentId]: {
+          ...currentCanvas,
+          edges: updatedEdges
+        }
+      }
     });
   },
   
   onConnect: (connection) => {
+    const { canvases, currentEnvironmentId } = get();
+    const currentCanvas = canvases[currentEnvironmentId];
+    if (!currentCanvas) return;
+    
+    const updatedEdges = addEdge(connection, currentCanvas.edges);
     set({
-      edges: addEdge(connection, get().edges)
+      canvases: {
+        ...canvases,
+        [currentEnvironmentId]: {
+          ...currentCanvas,
+          edges: updatedEdges
+        }
+      }
     });
   },
   
   setSelectedNode: (node) => set({ selectedNode: node }),
+  
+  // Environment actions
+  setCurrentEnvironment: (environmentId) => {
+    const { canvases } = get();
+    // Initialize canvas if environment doesn't exist
+    if (!canvases[environmentId]) {
+      // For the first environment (typically production), use demo data
+      const isFirstEnvironment = Object.keys(canvases).length === 0;
+      const canvasData = isFirstEnvironment ? productionCanvasData : { nodes: [], edges: [] };
+      
+      set({
+        canvases: {
+          ...canvases,
+          [environmentId]: canvasData
+        },
+        currentEnvironmentId: environmentId,
+        selectedNode: null // Clear selection when switching environments
+      });
+    } else {
+      set({ 
+        currentEnvironmentId: environmentId,
+        selectedNode: null // Clear selection when switching environments
+      });
+    }
+  },
+  
+  getCurrentCanvas: () => {
+    const { canvases, currentEnvironmentId } = get();
+    return canvases[currentEnvironmentId] || { nodes: [], edges: [] };
+  },
   
   // UI actions
   setActiveTab: (tab) => set({ activeTab: tab }),
@@ -426,31 +542,66 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   
   // Node operations
   addNode: (nodeData) => {
+    const { canvases, currentEnvironmentId } = get();
+    const currentCanvas = canvases[currentEnvironmentId];
+    if (!currentCanvas) return;
+    
     const newNode: Node<NodeData> = {
       id: `node-${Date.now()}`,
       ...nodeData
     };
-    set({ nodes: [...get().nodes, newNode] });
+    
+    set({
+      canvases: {
+        ...canvases,
+        [currentEnvironmentId]: {
+          ...currentCanvas,
+          nodes: [...currentCanvas.nodes, newNode]
+        }
+      }
+    });
   },
   
   updateNode: (id, data) => {
+    const { canvases, currentEnvironmentId } = get();
+    const currentCanvas = canvases[currentEnvironmentId];
+    if (!currentCanvas) return;
+    
+    const updatedNodes = currentCanvas.nodes.map(node =>
+      node.id === id ? { ...node, data: { ...node.data, ...data } } : node
+    );
+    
     set({
-      nodes: get().nodes.map(node =>
-        node.id === id ? { ...node, data: { ...node.data, ...data } } : node
-      )
+      canvases: {
+        ...canvases,
+        [currentEnvironmentId]: {
+          ...currentCanvas,
+          nodes: updatedNodes
+        }
+      }
     });
   },
   
   deleteNode: (id) => {
+    const { canvases, currentEnvironmentId } = get();
+    const currentCanvas = canvases[currentEnvironmentId];
+    if (!currentCanvas) return;
+    
     set({
-      nodes: get().nodes.filter(node => node.id !== id),
-      edges: get().edges.filter(edge => edge.source !== id && edge.target !== id)
+      canvases: {
+        ...canvases,
+        [currentEnvironmentId]: {
+          nodes: currentCanvas.nodes.filter(node => node.id !== id),
+          edges: currentCanvas.edges.filter(edge => edge.source !== id && edge.target !== id)
+        }
+      }
     });
   },
   
   // Simulation
   runSimulation: async () => {
-    const { nodes, edges, addTalkingBubble, removeTalkingBubble, addProcessingGear, removeProcessingGear, addHighlightedEdge, removeHighlightedEdge, clearAllAnimations } = get();
+    const { getCurrentCanvas, addTalkingBubble, removeTalkingBubble, addProcessingGear, removeProcessingGear, addHighlightedEdge, removeHighlightedEdge, clearAllAnimations } = get();
+    const { nodes, edges } = getCurrentCanvas();
     
     set({ isSimulationRunning: true });
     clearAllAnimations();

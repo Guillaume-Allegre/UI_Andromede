@@ -1,18 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Layers, ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { CreateEnvironmentModal } from '@/components/create-environment-modal';
+import { useWorkflowStore } from '@/store/workflow-store';
 import { type Environment } from '@shared/schema';
 
 export function Sidebar() {
-  const [selectedEnvironment, setSelectedEnvironment] = useState<string>('');
+  const { currentEnvironmentId, setCurrentEnvironment } = useWorkflowStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isEnvironmentsExpanded, setIsEnvironmentsExpanded] = useState(true);
 
   const { data: environments = [], isLoading } = useQuery<Environment[]>({
     queryKey: ['/api/environments'],
   });
+
+  // Set default environment when environments load
+  useEffect(() => {
+    if (environments.length > 0 && (!currentEnvironmentId || currentEnvironmentId === 'env-production')) {
+      // Find the production environment or use the first available
+      const prodEnv = environments.find(env => env.name.toLowerCase().includes('production'));
+      const targetEnv = prodEnv || environments[0];
+      setCurrentEnvironment(targetEnv.id);
+    }
+  }, [environments, currentEnvironmentId, setCurrentEnvironment]);
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -56,9 +67,9 @@ export function Sidebar() {
                 {environments.map((env) => (
                   <Button
                     key={env.id}
-                    variant={selectedEnvironment === env.id ? "secondary" : "ghost"}
+                    variant={currentEnvironmentId === env.id ? "secondary" : "ghost"}
                     className="w-full justify-start px-6 py-2 h-auto rounded-none text-left"
-                    onClick={() => setSelectedEnvironment(env.id)}
+                    onClick={() => setCurrentEnvironment(env.id)}
                   >
                     <div className="flex flex-col items-start">
                       <span className="text-sm font-medium">{env.name}</span>
@@ -77,8 +88,8 @@ export function Sidebar() {
       {/* Content area for future features */}
       <div className="flex-1 p-4">
         <div className="text-sm text-gray-500 text-center">
-          {selectedEnvironment 
-            ? `Working in ${environments.find(env => env.id === selectedEnvironment)?.name || 'Selected Environment'}`
+          {currentEnvironmentId 
+            ? `Working in ${environments.find(env => env.id === currentEnvironmentId)?.name || 'Selected Environment'}`
             : 'Select an environment to get started'
           }
         </div>
