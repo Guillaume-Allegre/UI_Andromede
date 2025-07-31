@@ -18,6 +18,15 @@ export const projects = pgTable("projects", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const environments = pgTable("environments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  userId: varchar("user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const scenarios = pgTable("scenarios", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -118,6 +127,12 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
   updatedAt: true,
 });
 
+export const insertEnvironmentSchema = createInsertSchema(environments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertScenarioSchema = createInsertSchema(scenarios).omit({
   id: true,
   createdAt: true,
@@ -144,6 +159,9 @@ export type User = typeof users.$inferSelect;
 
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projects.$inferSelect;
+
+export type InsertEnvironment = z.infer<typeof insertEnvironmentSchema>;
+export type Environment = typeof environments.$inferSelect;
 
 export type InsertScenario = z.infer<typeof insertScenarioSchema>;
 export type Scenario = typeof scenarios.$inferSelect;

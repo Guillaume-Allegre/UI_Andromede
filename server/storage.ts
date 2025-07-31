@@ -3,6 +3,8 @@ import {
   type InsertUser, 
   type Project, 
   type InsertProject,
+  type Environment,
+  type InsertEnvironment,
   type Scenario,
   type InsertScenario,
   type Tool,
@@ -31,6 +33,13 @@ export interface IStorage {
   createProject(project: InsertProject): Promise<Project>;
   updateProject(id: string, project: Partial<Project>): Promise<Project | undefined>;
   deleteProject(id: string): Promise<boolean>;
+
+  // Environments
+  getEnvironment(id: string): Promise<Environment | undefined>;
+  getEnvironmentsByUser(userId: string): Promise<Environment[]>;
+  createEnvironment(environment: InsertEnvironment): Promise<Environment>;
+  updateEnvironment(id: string, environment: Partial<Environment>): Promise<Environment | undefined>;
+  deleteEnvironment(id: string): Promise<boolean>;
 
   // Scenarios
   getScenario(id: string): Promise<Scenario | undefined>;
@@ -63,6 +72,7 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private projects: Map<string, Project>;
+  private environments: Map<string, Environment>;
   private scenarios: Map<string, Scenario>;
   private tools: Map<string, Tool>;
   private agents: Map<string, Agent>;
@@ -71,6 +81,7 @@ export class MemStorage implements IStorage {
   constructor() {
     this.users = new Map();
     this.projects = new Map();
+    this.environments = new Map();
     this.scenarios = new Map();
     this.tools = new Map();
     this.agents = new Map();
@@ -99,6 +110,35 @@ export class MemStorage implements IStorage {
       updatedAt: new Date()
     };
     this.projects.set(demoProject.id, demoProject);
+
+    // Create demo environments
+    const demoEnvironments: Environment[] = [
+      {
+        id: "env-production",
+        name: "Production",
+        description: "Live production environment",
+        userId: demoUser.id,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: "env-staging",
+        name: "Staging",
+        description: "Pre-production testing environment",
+        userId: demoUser.id,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: "env-development",
+        name: "Development",
+        description: "Development and testing environment",
+        userId: demoUser.id,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+    demoEnvironments.forEach(env => this.environments.set(env.id, env));
 
     // Create demo tools
     const demoTools: Tool[] = [
@@ -220,6 +260,47 @@ export class MemStorage implements IStorage {
 
   async deleteProject(id: string): Promise<boolean> {
     return this.projects.delete(id);
+  }
+
+  // Environments
+  async getEnvironment(id: string): Promise<Environment | undefined> {
+    return this.environments.get(id);
+  }
+
+  async getEnvironmentsByUser(userId: string): Promise<Environment[]> {
+    return Array.from(this.environments.values()).filter(e => e.userId === userId);
+  }
+
+  async createEnvironment(insertEnvironment: InsertEnvironment): Promise<Environment> {
+    const id = randomUUID();
+    const now = new Date();
+    const environment: Environment = { 
+      ...insertEnvironment,
+      description: insertEnvironment.description ?? null,
+      userId: insertEnvironment.userId ?? null,
+      id, 
+      createdAt: now, 
+      updatedAt: now 
+    };
+    this.environments.set(id, environment);
+    return environment;
+  }
+
+  async updateEnvironment(id: string, environmentUpdate: Partial<Environment>): Promise<Environment | undefined> {
+    const existing = this.environments.get(id);
+    if (!existing) return undefined;
+    
+    const updated: Environment = { 
+      ...existing, 
+      ...environmentUpdate, 
+      updatedAt: new Date() 
+    };
+    this.environments.set(id, updated);
+    return updated;
+  }
+
+  async deleteEnvironment(id: string): Promise<boolean> {
+    return this.environments.delete(id);
   }
 
   // Scenarios

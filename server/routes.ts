@@ -2,7 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
-  insertProjectSchema, 
+  insertProjectSchema,
+  insertEnvironmentSchema,
   insertScenarioSchema, 
   insertToolSchema, 
   insertAgentSchema,
@@ -48,6 +49,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: error.errors });
       }
       res.status(500).json({ error: "Failed to create project" });
+    }
+  });
+
+  // Environments
+  app.get("/api/environments", async (req, res) => {
+    try {
+      const environments = await storage.getEnvironmentsByUser("demo-user");
+      res.json(environments);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch environments" });
+    }
+  });
+
+  app.get("/api/environments/:id", async (req, res) => {
+    try {
+      const environment = await storage.getEnvironment(req.params.id);
+      if (!environment) {
+        return res.status(404).json({ error: "Environment not found" });
+      }
+      res.json(environment);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch environment" });
+    }
+  });
+
+  app.post("/api/environments", async (req, res) => {
+    try {
+      const environmentData = insertEnvironmentSchema.parse(req.body);
+      const environment = await storage.createEnvironment({
+        ...environmentData,
+        userId: "demo-user"
+      });
+      res.status(201).json(environment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create environment" });
     }
   });
 
