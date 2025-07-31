@@ -10,7 +10,12 @@ import {
   type Agent,
   type InsertAgent,
   type SimulationRun,
-  type InsertSimulationRun
+  type InsertSimulationRun,
+  type WorkflowNode,
+  type WorkflowEdge,
+  type AgentConfig,
+  type SimulationResult,
+  type SimulationLog
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -189,7 +194,9 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const now = new Date();
     const project: Project = { 
-      ...insertProject, 
+      ...insertProject,
+      description: insertProject.description ?? null,
+      userId: insertProject.userId ?? null,
       id, 
       createdAt: now, 
       updatedAt: now 
@@ -228,7 +235,11 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const now = new Date();
     const scenario: Scenario = { 
-      ...insertScenario, 
+      ...insertScenario,
+      projectId: insertScenario.projectId ?? null,
+      description: insertScenario.description ?? null,
+      nodes: (insertScenario.nodes as WorkflowNode[]) ?? null,
+      edges: (insertScenario.edges as WorkflowEdge[]) ?? null,
       id, 
       createdAt: now, 
       updatedAt: now 
@@ -265,7 +276,14 @@ export class MemStorage implements IStorage {
 
   async createTool(insertTool: InsertTool): Promise<Tool> {
     const id = randomUUID();
-    const tool: Tool = { ...insertTool, id };
+    const tool: Tool = { 
+      ...insertTool,
+      projectId: insertTool.projectId ?? null,
+      description: insertTool.description ?? null,
+      config: insertTool.config ?? null,
+      isActive: insertTool.isActive ?? null,
+      id 
+    };
     this.tools.set(id, tool);
     return tool;
   }
@@ -294,7 +312,13 @@ export class MemStorage implements IStorage {
 
   async createAgent(insertAgent: InsertAgent): Promise<Agent> {
     const id = randomUUID();
-    const agent: Agent = { ...insertAgent, id };
+    const agent: Agent = { 
+      ...insertAgent,
+      projectId: insertAgent.projectId ?? null,
+      description: insertAgent.description ?? null,
+      config: (insertAgent.config as AgentConfig) ?? null,
+      id 
+    };
     this.agents.set(id, agent);
     return agent;
   }
@@ -325,7 +349,11 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const now = new Date();
     const run: SimulationRun = { 
-      ...insertRun, 
+      ...insertRun,
+      scenarioId: insertRun.scenarioId ?? null,
+      results: (insertRun.results as SimulationResult) ?? null,
+      metrics: insertRun.metrics ?? null,
+      logs: (insertRun.logs as SimulationLog[]) ?? null,
       id, 
       startedAt: now,
       completedAt: null
