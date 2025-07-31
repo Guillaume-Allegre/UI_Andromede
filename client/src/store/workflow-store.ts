@@ -16,11 +16,16 @@ interface WorkflowState {
   showAddComponentModal: boolean;
   addComponentType: NodeType | null;
   
+  // Retrain state
+  isRetrainRunning: boolean;
+  retrainAgentId: string | null;
+  
   // Animation state
   simulationAnimations: {
     talkingBubbles: Set<string>;
     processingGears: Set<string>;
     highlightedEdges: Set<string>;
+    retrainGears: Set<string>;
   };
   
   // Sidebar state
@@ -41,6 +46,11 @@ interface WorkflowState {
   setShowAddComponentModal: (show: boolean) => void;
   setAddComponentType: (type: NodeType | null) => void;
   
+  // Retrain actions
+  setRetrainRunning: (running: boolean) => void;
+  setRetrainAgentId: (agentId: string | null) => void;
+  runRetrain: (agentId: string, method: string, rewardId: string) => Promise<void>;
+  
   // Animation actions
   addTalkingBubble: (nodeId: string) => void;
   removeTalkingBubble: (nodeId: string) => void;
@@ -48,6 +58,8 @@ interface WorkflowState {
   removeProcessingGear: (nodeId: string) => void;
   addHighlightedEdge: (edgeId: string) => void;
   removeHighlightedEdge: (edgeId: string) => void;
+  addRetrainGear: (nodeId: string) => void;
+  removeRetrainGear: (nodeId: string) => void;
   clearAllAnimations: () => void;
   
   toggleSection: (section: string) => void;
@@ -194,10 +206,13 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   simulationResults: null,
   showAddComponentModal: false,
   addComponentType: null,
+  isRetrainRunning: false,
+  retrainAgentId: null,
   simulationAnimations: {
     talkingBubbles: new Set(),
     processingGears: new Set(),
     highlightedEdges: new Set(),
+    retrainGears: new Set(),
   },
   expandedSections: ['environments', 'agents'],
   
@@ -232,6 +247,29 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   setSimulationResults: (results) => set({ simulationResults: results }),
   setShowAddComponentModal: (show) => set({ showAddComponentModal: show }),
   setAddComponentType: (type) => set({ addComponentType: type }),
+  
+  // Retrain actions
+  setRetrainRunning: (running) => set({ isRetrainRunning: running }),
+  setRetrainAgentId: (agentId) => set({ retrainAgentId: agentId }),
+  
+  runRetrain: async (agentId, method, rewardId) => {
+    const { addRetrainGear, removeRetrainGear } = get();
+    
+    set({ isRetrainRunning: true, retrainAgentId: agentId });
+    addRetrainGear(agentId);
+    
+    try {
+      // Simulate retrain process
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      console.log(`Retrain completed for agent ${agentId} using ${method} with reward ${rewardId}`);
+    } catch (error) {
+      console.error('Retrain failed:', error);
+    } finally {
+      removeRetrainGear(agentId);
+      set({ isRetrainRunning: false, retrainAgentId: null });
+    }
+  },
   
   // Animation actions
   addTalkingBubble: (nodeId) => {
@@ -306,12 +344,37 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     });
   },
   
+  addRetrainGear: (nodeId) => {
+    const { simulationAnimations } = get();
+    const newGears = new Set(simulationAnimations.retrainGears);
+    newGears.add(nodeId);
+    set({
+      simulationAnimations: {
+        ...simulationAnimations,
+        retrainGears: newGears
+      }
+    });
+  },
+  
+  removeRetrainGear: (nodeId) => {
+    const { simulationAnimations } = get();
+    const newGears = new Set(simulationAnimations.retrainGears);
+    newGears.delete(nodeId);
+    set({
+      simulationAnimations: {
+        ...simulationAnimations,
+        retrainGears: newGears
+      }
+    });
+  },
+
   clearAllAnimations: () => {
     set({
       simulationAnimations: {
         talkingBubbles: new Set(),
         processingGears: new Set(),
         highlightedEdges: new Set(),
+        retrainGears: new Set(),
       }
     });
   },

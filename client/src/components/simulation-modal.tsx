@@ -21,7 +21,7 @@ export function SimulationModal() {
     <Dialog open={showSimulationModal} onOpenChange={setShowSimulationModal}>
       <DialogContent className="max-w-4xl h-3/4 flex flex-col p-0">
         <DialogHeader className="flex flex-row items-center justify-between p-6 border-b">
-          <DialogTitle>Simulation Results</DialogTitle>
+          <DialogTitle>Evaluation Results</DialogTitle>
           <Button variant="ghost" size="sm" onClick={handleClose}>
             <X className="w-4 h-4" />
           </Button>
@@ -34,7 +34,7 @@ export function SimulationModal() {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-gray-600">Running simulation...</p>
+                  <p className="text-gray-600">Running evaluation...</p>
                 </div>
               </div>
             ) : simulationResults ? (
@@ -62,7 +62,7 @@ export function SimulationModal() {
               </div>
             ) : (
               <div className="text-center text-gray-500">
-                No simulation data available
+                No evaluation data available
               </div>
             )}
           </div>
