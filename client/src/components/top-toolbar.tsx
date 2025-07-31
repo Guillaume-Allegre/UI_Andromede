@@ -33,9 +33,11 @@ export function TopToolbar() {
   const [selectedReward, setSelectedReward] = useState('');
 
   const handleTabClick = (tab: typeof tabs[0]) => {
+    console.log('Tab clicked:', tab);
     setActiveTab(tab.id);
     setAddComponentType(tab.nodeType);
     setShowAddComponentModal(true);
+    console.log('Modal should now be shown');
   };
 
   // Get agents and rewards from current nodes

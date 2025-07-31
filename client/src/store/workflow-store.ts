@@ -542,14 +542,23 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   
   // Node operations
   addNode: (nodeData) => {
+    console.log('addNode called with:', nodeData);
     const { canvases, currentEnvironmentId } = get();
+    console.log('Current environment ID:', currentEnvironmentId);
+    console.log('Available canvases:', Object.keys(canvases));
     const currentCanvas = canvases[currentEnvironmentId];
-    if (!currentCanvas) return;
+    if (!currentCanvas) {
+      console.error('No current canvas found for environment:', currentEnvironmentId);
+      return;
+    }
     
     const newNode: Node<NodeData> = {
       id: `node-${Date.now()}`,
       ...nodeData
     };
+    
+    console.log('Creating new node:', newNode);
+    console.log('Current canvas nodes before:', currentCanvas.nodes.length);
     
     set({
       canvases: {
@@ -560,6 +569,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         }
       }
     });
+    
+    console.log('Node added to store');
   },
   
   updateNode: (id, data) => {
