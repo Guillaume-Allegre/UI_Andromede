@@ -17,8 +17,17 @@ import {
   type WorkflowEdge,
   type AgentConfig,
   type SimulationResult,
-  type SimulationLog
+  type SimulationLog,
+  users,
+  projects,
+  environments,
+  scenarios,
+  tools,
+  agents,
+  simulationRuns
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -69,388 +78,194 @@ export interface IStorage {
   updateSimulationRun(id: string, run: Partial<SimulationRun>): Promise<SimulationRun | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private projects: Map<string, Project>;
-  private environments: Map<string, Environment>;
-  private scenarios: Map<string, Scenario>;
-  private tools: Map<string, Tool>;
-  private agents: Map<string, Agent>;
-  private simulationRuns: Map<string, SimulationRun>;
+export class DatabaseStorage implements IStorage {
 
-  constructor() {
-    this.users = new Map();
-    this.projects = new Map();
-    this.environments = new Map();
-    this.scenarios = new Map();
-    this.tools = new Map();
-    this.agents = new Map();
-    this.simulationRuns = new Map();
 
-    // Initialize with demo data
-    this.initializeDemoData();
-  }
-
-  private initializeDemoData() {
-    // Create demo user
-    const demoUser: User = {
-      id: "demo-user",
-      username: "demo",
-      password: "demo123"
-    };
-    this.users.set(demoUser.id, demoUser);
-
-    // Create demo project
-    const demoProject: Project = {
-      id: "demo-project",
-      name: "Helix",
-      description: "AI Agent Platform",
-      userId: demoUser.id,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    this.projects.set(demoProject.id, demoProject);
-
-    // Create demo environments
-    const demoEnvironments: Environment[] = [
-      {
-        id: "env-production",
-        name: "Production",
-        description: "Live production environment",
-        userId: demoUser.id,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: "env-staging",
-        name: "Staging",
-        description: "Pre-production testing environment",
-        userId: demoUser.id,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: "env-development",
-        name: "Development",
-        description: "Development and testing environment",
-        userId: demoUser.id,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
-    demoEnvironments.forEach(env => this.environments.set(env.id, env));
-
-    // Create demo tools
-    const demoTools: Tool[] = [
-      {
-        id: "tool-outlook",
-        name: "Outlook",
-        type: "outlook",
-        description: "Email Tool",
-        config: {},
-        isActive: true,
-        projectId: demoProject.id
-      },
-      {
-        id: "tool-calendar",
-        name: "Calendar",
-        type: "calendar",
-        description: "Scheduling Tool",
-        config: {},
-        isActive: true,
-        projectId: demoProject.id
-      },
-      {
-        id: "tool-salesforce",
-        name: "SalesForce",
-        type: "salesforce",
-        description: "CRM Tool",
-        config: {},
-        isActive: true,
-        projectId: demoProject.id
-      },
-      {
-        id: "tool-openai",
-        name: "OpenAI",
-        type: "openai",
-        description: "LLM Provider",
-        config: {},
-        isActive: true,
-        projectId: demoProject.id
-      }
-    ];
-
-    demoTools.forEach(tool => this.tools.set(tool.id, tool));
-
-    // Create demo agents
-    const demoAgents: Agent[] = [
-      {
-        id: "agent-salesgpt",
-        name: "SalesGPT",
-        type: "openai",
-        description: "Intelligent sales agent",
-        config: {
-          provider: "openai",
-          model: "gpt-4",
-          temperature: 0.7,
-          maxTokens: 2048,
-          tools: ["tool-salesforce", "tool-calendar"]
-        },
-        projectId: demoProject.id
-      }
-    ];
-
-    demoAgents.forEach(agent => this.agents.set(agent.id, agent));
-  }
 
   // Users
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   // Projects
   async getProject(id: string): Promise<Project | undefined> {
-    return this.projects.get(id);
+    const [project] = await db.select().from(projects).where(eq(projects.id, id));
+    return project || undefined;
   }
 
   async getProjectsByUser(userId: string): Promise<Project[]> {
-    return Array.from(this.projects.values()).filter(p => p.userId === userId);
+    return await db.select().from(projects).where(eq(projects.userId, userId));
   }
 
   async createProject(insertProject: InsertProject): Promise<Project> {
-    const id = randomUUID();
-    const now = new Date();
-    const project: Project = { 
-      ...insertProject,
-      description: insertProject.description ?? null,
-      userId: insertProject.userId ?? null,
-      id, 
-      createdAt: now, 
-      updatedAt: now 
-    };
-    this.projects.set(id, project);
+    const [project] = await db.insert(projects).values(insertProject).returning();
     return project;
   }
 
   async updateProject(id: string, projectUpdate: Partial<Project>): Promise<Project | undefined> {
-    const existing = this.projects.get(id);
-    if (!existing) return undefined;
-    
-    const updated: Project = { 
-      ...existing, 
-      ...projectUpdate, 
-      updatedAt: new Date() 
-    };
-    this.projects.set(id, updated);
-    return updated;
+    const [updated] = await db
+      .update(projects)
+      .set({ ...projectUpdate, updatedAt: new Date() })
+      .where(eq(projects.id, id))
+      .returning();
+    return updated || undefined;
   }
 
   async deleteProject(id: string): Promise<boolean> {
-    return this.projects.delete(id);
+    const result = await db.delete(projects).where(eq(projects.id, id));
+    return result.rowCount > 0;
   }
 
   // Environments
   async getEnvironment(id: string): Promise<Environment | undefined> {
-    return this.environments.get(id);
+    const [environment] = await db.select().from(environments).where(eq(environments.id, id));
+    return environment || undefined;
   }
 
   async getEnvironmentsByUser(userId: string): Promise<Environment[]> {
-    return Array.from(this.environments.values()).filter(e => e.userId === userId);
+    return await db.select().from(environments).where(eq(environments.userId, userId));
   }
 
   async createEnvironment(insertEnvironment: InsertEnvironment): Promise<Environment> {
-    const id = randomUUID();
-    const now = new Date();
-    const environment: Environment = { 
-      ...insertEnvironment,
-      description: insertEnvironment.description ?? null,
-      userId: insertEnvironment.userId ?? null,
-      id, 
-      createdAt: now, 
-      updatedAt: now 
-    };
-    this.environments.set(id, environment);
+    const [environment] = await db.insert(environments).values(insertEnvironment).returning();
     return environment;
   }
 
   async updateEnvironment(id: string, environmentUpdate: Partial<Environment>): Promise<Environment | undefined> {
-    const existing = this.environments.get(id);
-    if (!existing) return undefined;
-    
-    const updated: Environment = { 
-      ...existing, 
-      ...environmentUpdate, 
-      updatedAt: new Date() 
-    };
-    this.environments.set(id, updated);
-    return updated;
+    const [updated] = await db
+      .update(environments)
+      .set({ ...environmentUpdate, updatedAt: new Date() })
+      .where(eq(environments.id, id))
+      .returning();
+    return updated || undefined;
   }
 
   async deleteEnvironment(id: string): Promise<boolean> {
-    return this.environments.delete(id);
+    const result = await db.delete(environments).where(eq(environments.id, id));
+    return result.rowCount > 0;
   }
 
   // Scenarios
   async getScenario(id: string): Promise<Scenario | undefined> {
-    return this.scenarios.get(id);
+    const [scenario] = await db.select().from(scenarios).where(eq(scenarios.id, id));
+    return scenario || undefined;
   }
 
   async getScenariosByProject(projectId: string): Promise<Scenario[]> {
-    return Array.from(this.scenarios.values()).filter(s => s.projectId === projectId);
+    return await db.select().from(scenarios).where(eq(scenarios.projectId, projectId));
   }
 
   async createScenario(insertScenario: InsertScenario): Promise<Scenario> {
-    const id = randomUUID();
-    const now = new Date();
-    const scenario: Scenario = { 
-      ...insertScenario,
-      projectId: insertScenario.projectId ?? null,
-      description: insertScenario.description ?? null,
-      nodes: (insertScenario.nodes as WorkflowNode[]) ?? null,
-      edges: (insertScenario.edges as WorkflowEdge[]) ?? null,
-      id, 
-      createdAt: now, 
-      updatedAt: now 
-    };
-    this.scenarios.set(id, scenario);
+    const [scenario] = await db.insert(scenarios).values(insertScenario).returning();
     return scenario;
   }
 
   async updateScenario(id: string, scenarioUpdate: Partial<Scenario>): Promise<Scenario | undefined> {
-    const existing = this.scenarios.get(id);
-    if (!existing) return undefined;
-    
-    const updated: Scenario = { 
-      ...existing, 
-      ...scenarioUpdate, 
-      updatedAt: new Date() 
-    };
-    this.scenarios.set(id, updated);
-    return updated;
+    const [updated] = await db
+      .update(scenarios)
+      .set({ ...scenarioUpdate, updatedAt: new Date() })
+      .where(eq(scenarios.id, id))
+      .returning();
+    return updated || undefined;
   }
 
   async deleteScenario(id: string): Promise<boolean> {
-    return this.scenarios.delete(id);
+    const result = await db.delete(scenarios).where(eq(scenarios.id, id));
+    return result.rowCount > 0;
   }
 
   // Tools
   async getTool(id: string): Promise<Tool | undefined> {
-    return this.tools.get(id);
+    const [tool] = await db.select().from(tools).where(eq(tools.id, id));
+    return tool || undefined;
   }
 
   async getToolsByProject(projectId: string): Promise<Tool[]> {
-    return Array.from(this.tools.values()).filter(t => t.projectId === projectId);
+    return await db.select().from(tools).where(eq(tools.projectId, projectId));
   }
 
   async createTool(insertTool: InsertTool): Promise<Tool> {
-    const id = randomUUID();
-    const tool: Tool = { 
-      ...insertTool,
-      projectId: insertTool.projectId ?? null,
-      description: insertTool.description ?? null,
-      config: insertTool.config ?? null,
-      isActive: insertTool.isActive ?? null,
-      id 
-    };
-    this.tools.set(id, tool);
+    const [tool] = await db.insert(tools).values(insertTool).returning();
     return tool;
   }
 
   async updateTool(id: string, toolUpdate: Partial<Tool>): Promise<Tool | undefined> {
-    const existing = this.tools.get(id);
-    if (!existing) return undefined;
-    
-    const updated: Tool = { ...existing, ...toolUpdate };
-    this.tools.set(id, updated);
-    return updated;
+    const [updated] = await db
+      .update(tools)
+      .set(toolUpdate)
+      .where(eq(tools.id, id))
+      .returning();
+    return updated || undefined;
   }
 
   async deleteTool(id: string): Promise<boolean> {
-    return this.tools.delete(id);
+    const result = await db.delete(tools).where(eq(tools.id, id));
+    return result.rowCount > 0;
   }
 
   // Agents
   async getAgent(id: string): Promise<Agent | undefined> {
-    return this.agents.get(id);
+    const [agent] = await db.select().from(agents).where(eq(agents.id, id));
+    return agent || undefined;
   }
 
   async getAgentsByProject(projectId: string): Promise<Agent[]> {
-    return Array.from(this.agents.values()).filter(a => a.projectId === projectId);
+    return await db.select().from(agents).where(eq(agents.projectId, projectId));
   }
 
   async createAgent(insertAgent: InsertAgent): Promise<Agent> {
-    const id = randomUUID();
-    const agent: Agent = { 
-      ...insertAgent,
-      projectId: insertAgent.projectId ?? null,
-      description: insertAgent.description ?? null,
-      config: (insertAgent.config as AgentConfig) ?? null,
-      id 
-    };
-    this.agents.set(id, agent);
+    const [agent] = await db.insert(agents).values(insertAgent).returning();
     return agent;
   }
 
   async updateAgent(id: string, agentUpdate: Partial<Agent>): Promise<Agent | undefined> {
-    const existing = this.agents.get(id);
-    if (!existing) return undefined;
-    
-    const updated: Agent = { ...existing, ...agentUpdate };
-    this.agents.set(id, updated);
-    return updated;
+    const [updated] = await db
+      .update(agents)
+      .set(agentUpdate)
+      .where(eq(agents.id, id))
+      .returning();
+    return updated || undefined;
   }
 
   async deleteAgent(id: string): Promise<boolean> {
-    return this.agents.delete(id);
+    const result = await db.delete(agents).where(eq(agents.id, id));
+    return result.rowCount > 0;
   }
 
   // Simulation Runs
   async getSimulationRun(id: string): Promise<SimulationRun | undefined> {
-    return this.simulationRuns.get(id);
+    const [run] = await db.select().from(simulationRuns).where(eq(simulationRuns.id, id));
+    return run || undefined;
   }
 
   async getSimulationRunsByScenario(scenarioId: string): Promise<SimulationRun[]> {
-    return Array.from(this.simulationRuns.values()).filter(r => r.scenarioId === scenarioId);
+    return await db.select().from(simulationRuns).where(eq(simulationRuns.scenarioId, scenarioId));
   }
 
   async createSimulationRun(insertRun: InsertSimulationRun): Promise<SimulationRun> {
-    const id = randomUUID();
-    const now = new Date();
-    const run: SimulationRun = { 
-      ...insertRun,
-      scenarioId: insertRun.scenarioId ?? null,
-      results: (insertRun.results as SimulationResult) ?? null,
-      metrics: insertRun.metrics ?? null,
-      logs: (insertRun.logs as SimulationLog[]) ?? null,
-      id, 
-      startedAt: now,
-      completedAt: null
-    };
-    this.simulationRuns.set(id, run);
+    const [run] = await db.insert(simulationRuns).values(insertRun).returning();
     return run;
   }
 
   async updateSimulationRun(id: string, runUpdate: Partial<SimulationRun>): Promise<SimulationRun | undefined> {
-    const existing = this.simulationRuns.get(id);
-    if (!existing) return undefined;
-    
-    const updated: SimulationRun = { ...existing, ...runUpdate };
-    this.simulationRuns.set(id, updated);
-    return updated;
+    const [updated] = await db
+      .update(simulationRuns)
+      .set(runUpdate)
+      .where(eq(simulationRuns.id, id))
+      .returning();
+    return updated || undefined;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

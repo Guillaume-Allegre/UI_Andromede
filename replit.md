@@ -28,6 +28,7 @@ The application follows a full-stack architecture with a clear separation betwee
 - **Database**: PostgreSQL with Drizzle ORM
 - **Database Provider**: Neon Database (serverless PostgreSQL)
 - **Session Management**: PostgreSQL-based session storage
+- **Data Storage**: Migrated from in-memory storage to PostgreSQL database with full CRUD operations
 
 ## Key Components
 
@@ -100,3 +101,12 @@ The application follows a full-stack architecture with a clear separation betwee
 - **Environment Flexibility**: Configurable for development and production environments
 
 The architecture prioritizes developer experience with fast builds, type safety, and modern tooling while maintaining the flexibility to scale and extend the AI agent workflow designer functionality.
+
+## Recent Changes
+
+### Database Migration (July 31, 2025)
+- Successfully migrated from in-memory storage to PostgreSQL database
+- Implemented DatabaseStorage class with full Drizzle ORM integration
+- Created database schema with tables for users, projects, environments, scenarios, tools, agents, and simulation runs
+- Added database seeding with demo data for immediate usability
+- All API endpoints now use persistent database storage
