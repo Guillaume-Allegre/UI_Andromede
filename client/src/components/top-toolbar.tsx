@@ -1,5 +1,6 @@
-import { Play, Save } from 'lucide-react';
+import { Play, Save, Plus, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useWorkflowStore } from '@/store/workflow-store';
 import type { NodeType } from '@/types/workflow';
 
@@ -30,23 +31,32 @@ export function TopToolbar() {
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-3">
       <div className="flex items-center justify-between">
-        {/* Tabs */}
-        <div className="flex space-x-1">
-          {tabs.map((tab) => (
-            <Button
-              key={tab.id}
-              variant={activeTab === tab.id ? "default" : "ghost"}
-              size="sm"
-              onClick={() => handleTabClick(tab)}
-              className={activeTab === tab.id ? "bg-primary/10 text-primary" : ""}
-            >
-              {tab.label}
-            </Button>
-          ))}
-        </div>
+        {/* Left side - empty for now */}
+        <div></div>
 
         {/* Actions */}
         <div className="flex items-center space-x-3">
+          {/* Add Components Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Component
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {tabs.map((tab) => (
+                <DropdownMenuItem
+                  key={tab.id}
+                  onClick={() => handleTabClick(tab)}
+                >
+                  {tab.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button 
             variant="outline" 
             size="sm"
