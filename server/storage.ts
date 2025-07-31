@@ -167,7 +167,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createScenario(insertScenario: InsertScenario): Promise<Scenario> {
-    const [scenario] = await db.insert(scenarios).values([insertScenario]).returning();
+    const [scenario] = await db.insert(scenarios).values(insertScenario as any).returning();
     return scenario;
   }
 
@@ -225,7 +225,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAgent(insertAgent: InsertAgent): Promise<Agent> {
-    const [agent] = await db.insert(agents).values([insertAgent]).returning();
+    const [agent] = await db.insert(agents).values(insertAgent as any).returning();
     return agent;
   }
 
@@ -254,7 +254,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSimulationRun(insertRun: InsertSimulationRun): Promise<SimulationRun> {
-    const [run] = await db.insert(simulationRuns).values([insertRun]).returning();
+    const [run] = await db.insert(simulationRuns).values(insertRun as any).returning();
     return run;
   }
 
