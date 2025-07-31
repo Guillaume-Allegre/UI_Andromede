@@ -114,6 +114,9 @@ The architecture prioritizes developer experience with fast builds, type safety,
 - Added retrain functionality with red gear animation for agent retraining
 - Implemented conditional properties panel that only opens when component is selected
 - Enhanced animation system to support both evaluation and retrain workflows
+- **Linked canvas to environments: Each environment now has its own dedicated canvas**
+- Environment switching in sidebar now switches between different canvases
+- Demo data loads in the first environment, other environments start empty
 
 ### Database Migration (July 31, 2025)
 - Successfully migrated from in-memory storage to PostgreSQL database
