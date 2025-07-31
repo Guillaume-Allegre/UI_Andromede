@@ -35,6 +35,8 @@ function Flow() {
     simulationAnimations
   } = useWorkflowStore();
 
+  console.log('Canvas rendering with nodes:', nodes.length, nodes.map(n => ({ id: n.id, type: n.type, name: n.data?.name })));
+
   // Add animation styling to highlighted edges
   const animatedEdges = edges.map(edge => ({
     ...edge,

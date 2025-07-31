@@ -245,16 +245,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
   expandedSections: ['environments', 'agents'],
   
-  // Computed properties
-  get nodes() {
-    const { canvases, currentEnvironmentId } = get();
-    return canvases[currentEnvironmentId]?.nodes || [];
-  },
-  
-  get edges() {
-    const { canvases, currentEnvironmentId } = get();
-    return canvases[currentEnvironmentId]?.edges || [];
-  },
+  // Current canvas nodes and edges (reactive)
+  nodes: [],
+  edges: [],
   
   // Canvas actions
   setNodes: (nodes) => {
@@ -356,13 +349,18 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
           [environmentId]: canvasData
         },
         currentEnvironmentId: environmentId,
-        selectedNode: null // Clear selection when switching environments
+        selectedNode: null, // Clear selection when switching environments
+        nodes: canvasData.nodes,
+        edges: canvasData.edges
       });
     } else {
       console.log('Using existing canvas for environment:', environmentId);
+      const currentCanvas = canvases[environmentId];
       set({ 
         currentEnvironmentId: environmentId,
-        selectedNode: null // Clear selection when switching environments
+        selectedNode: null, // Clear selection when switching environments
+        nodes: currentCanvas.nodes,
+        edges: currentCanvas.edges
       });
     }
     
@@ -568,14 +566,17 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     console.log('Creating new node:', newNode);
     console.log('Current canvas nodes before:', currentCanvas.nodes.length);
     
+    const updatedNodes = [...currentCanvas.nodes, newNode];
+    
     set({
       canvases: {
         ...canvases,
         [currentEnvironmentId]: {
           ...currentCanvas,
-          nodes: [...currentCanvas.nodes, newNode]
+          nodes: updatedNodes
         }
-      }
+      },
+      nodes: updatedNodes // Update reactive state
     });
     
     console.log('Node added to store');
