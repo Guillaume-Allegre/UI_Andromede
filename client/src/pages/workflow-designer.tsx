@@ -3,6 +3,7 @@ import { TopToolbar } from '@/components/top-toolbar';
 import { CanvasArea } from '@/components/canvas-area';
 import { PropertiesPanel } from '@/components/properties-panel';
 import { SimulationModal } from '@/components/simulation-modal';
+import { ResultsModal } from '@/components/results-modal';
 import { AddComponentModal } from '@/components/add-component-modal';
 import { useWorkflowStore } from '@/store/workflow-store';
 
@@ -25,6 +26,7 @@ export default function WorkflowDesigner() {
       
       {selectedNode && <PropertiesPanel />}
       <SimulationModal />
+      <ResultsModal />
       <AddComponentModal 
         isOpen={showAddComponentModal}
         onClose={() => setShowAddComponentModal(false)}

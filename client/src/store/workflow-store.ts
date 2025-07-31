@@ -20,6 +20,10 @@ interface WorkflowState {
   isRetrainRunning: boolean;
   retrainAgentId: string | null;
   
+  // Results state
+  showResultsModal: boolean;
+  resultsData: any;
+  
   // Animation state
   simulationAnimations: {
     talkingBubbles: Set<string>;
@@ -50,6 +54,10 @@ interface WorkflowState {
   setRetrainRunning: (running: boolean) => void;
   setRetrainAgentId: (agentId: string | null) => void;
   runRetrain: (agentId: string, method: string, rewardId: string) => Promise<void>;
+  
+  // Results actions
+  setShowResultsModal: (show: boolean) => void;
+  setResultsData: (data: any) => void;
   
   // Animation actions
   addTalkingBubble: (nodeId: string) => void;
@@ -208,6 +216,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   addComponentType: null,
   isRetrainRunning: false,
   retrainAgentId: null,
+  showResultsModal: false,
+  resultsData: null,
   simulationAnimations: {
     talkingBubbles: new Set(),
     processingGears: new Set(),
@@ -253,7 +263,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   setRetrainAgentId: (agentId) => set({ retrainAgentId: agentId }),
   
   runRetrain: async (agentId, method, rewardId) => {
-    const { addRetrainGear, removeRetrainGear } = get();
+    const { addRetrainGear, removeRetrainGear, setShowResultsModal, setResultsData } = get();
     
     set({ isRetrainRunning: true, retrainAgentId: agentId });
     addRetrainGear(agentId);
@@ -262,7 +272,28 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       // Simulate retrain process
       await new Promise(resolve => setTimeout(resolve, 5000));
       
+      // Generate results data
+      const resultsData = {
+        agentId,
+        method,
+        rewardId,
+        completedAt: new Date(),
+        improvements: [
+          { metric: 'Success Rate', before: 87, after: 94 },
+          { metric: 'Response Time', before: 2400, after: 1800 },
+          { metric: 'Completion Rate', before: 92, after: 96 },
+          { metric: 'Error Rate', before: 8.5, after: 3.2 }
+        ]
+      };
+      
+      setResultsData(resultsData);
       console.log(`Retrain completed for agent ${agentId} using ${method} with reward ${rewardId}`);
+      
+      // Show results modal after a brief delay
+      setTimeout(() => {
+        setShowResultsModal(true);
+      }, 500);
+      
     } catch (error) {
       console.error('Retrain failed:', error);
     } finally {
@@ -270,6 +301,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       set({ isRetrainRunning: false, retrainAgentId: null });
     }
   },
+  
+  // Results actions
+  setShowResultsModal: (show) => set({ showResultsModal: show }),
+  setResultsData: (data) => set({ resultsData: data }),
   
   // Animation actions
   addTalkingBubble: (nodeId) => {
