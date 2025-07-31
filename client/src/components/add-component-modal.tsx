@@ -103,6 +103,8 @@ export function AddComponentModal({ isOpen, onClose, componentType }: AddCompone
     description: ''
   });
 
+  console.log('AddComponentModal render - isOpen:', isOpen, 'componentType:', componentType);
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -190,7 +192,7 @@ export function AddComponentModal({ isOpen, onClose, componentType }: AddCompone
           <div>
             <Label htmlFor="type" className="text-sm font-medium">Type *</Label>
             <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
-              <SelectTrigger className="mt-1">
+              <SelectTrigger className="mt-1" id="type">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>

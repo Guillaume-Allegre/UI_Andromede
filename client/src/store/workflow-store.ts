@@ -338,12 +338,17 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   
   // Environment actions
   setCurrentEnvironment: (environmentId) => {
+    console.log('Setting current environment to:', environmentId);
     const { canvases } = get();
+    console.log('Available canvases before:', Object.keys(canvases));
+    
     // Initialize canvas if environment doesn't exist
     if (!canvases[environmentId]) {
       // For the first environment (typically production), use demo data
       const isFirstEnvironment = Object.keys(canvases).length === 0;
       const canvasData = isFirstEnvironment ? productionCanvasData : { nodes: [], edges: [] };
+      
+      console.log('Creating new canvas for environment:', environmentId, 'with data:', canvasData);
       
       set({
         canvases: {
@@ -354,11 +359,14 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         selectedNode: null // Clear selection when switching environments
       });
     } else {
+      console.log('Using existing canvas for environment:', environmentId);
       set({ 
         currentEnvironmentId: environmentId,
         selectedNode: null // Clear selection when switching environments
       });
     }
+    
+    console.log('Current environment set to:', environmentId);
   },
   
   getCurrentCanvas: () => {
