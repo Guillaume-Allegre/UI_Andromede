@@ -1,7 +1,8 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { Mail, Calendar, Cloud, Brain, Wrench } from 'lucide-react';
+import { Mail, Calendar, Cloud, Brain, Wrench, Cog } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { useWorkflowStore } from '@/store/workflow-store';
 import type { NodeData } from '@/types/workflow';
 
 const iconMap = {
@@ -20,11 +21,15 @@ const colorMap = {
 };
 
 interface ToolNodeProps {
+  id: string;
   data: NodeData;
   selected?: boolean;
 }
 
-export const ToolNode = memo(({ data, selected }: ToolNodeProps) => {
+export const ToolNode = memo(({ id, data, selected }: ToolNodeProps) => {
+  const { simulationAnimations } = useWorkflowStore();
+  const hasProcessingGear = simulationAnimations.processingGears.has(id);
+  
   const IconComponent = iconMap[data.icon as keyof typeof iconMap] || Wrench;
   const colorClass = colorMap[data.color as keyof typeof colorMap] || colorMap.gray;
 
@@ -33,6 +38,15 @@ export const ToolNode = memo(({ data, selected }: ToolNodeProps) => {
       selected ? 'ring-2 ring-primary' : ''
     }`}>
       <Handle type="target" position={Position.Left} className="w-3 h-3" />
+      
+      {/* Processing Gear Animation */}
+      {hasProcessingGear && (
+        <div className="absolute -top-2 -right-2">
+          <div className="bg-green-500 text-white rounded-full p-1 shadow-lg">
+            <Cog className="w-4 h-4 animate-spin" />
+          </div>
+        </div>
+      )}
       
       <div className="flex items-center space-x-3">
         <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClass}`}>

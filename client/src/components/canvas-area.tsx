@@ -31,8 +31,22 @@ function Flow() {
     onNodesChange,
     onEdgesChange,
     onConnect,
-    setSelectedNode
+    setSelectedNode,
+    simulationAnimations
   } = useWorkflowStore();
+
+  // Add animation styling to highlighted edges
+  const animatedEdges = edges.map(edge => ({
+    ...edge,
+    animated: simulationAnimations.highlightedEdges.has(edge.id),
+    style: simulationAnimations.highlightedEdges.has(edge.id) 
+      ? { 
+          stroke: '#3b82f6', 
+          strokeWidth: 3,
+          strokeDasharray: '10,5'
+        }
+      : {}
+  }));
 
   const onNodeClick = useCallback((event: any, node: any) => {
     setSelectedNode(node);
@@ -46,7 +60,7 @@ function Flow() {
     <div className="flex-1 relative">
       <ReactFlow
         nodes={nodes}
-        edges={edges}
+        edges={animatedEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}

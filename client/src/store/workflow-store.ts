@@ -16,6 +16,13 @@ interface WorkflowState {
   showAddComponentModal: boolean;
   addComponentType: NodeType | null;
   
+  // Animation state
+  simulationAnimations: {
+    talkingBubbles: Set<string>;
+    processingGears: Set<string>;
+    highlightedEdges: Set<string>;
+  };
+  
   // Sidebar state
   expandedSections: string[];
   
@@ -33,6 +40,15 @@ interface WorkflowState {
   setSimulationResults: (results: any) => void;
   setShowAddComponentModal: (show: boolean) => void;
   setAddComponentType: (type: NodeType | null) => void;
+  
+  // Animation actions
+  addTalkingBubble: (nodeId: string) => void;
+  removeTalkingBubble: (nodeId: string) => void;
+  addProcessingGear: (nodeId: string) => void;
+  removeProcessingGear: (nodeId: string) => void;
+  addHighlightedEdge: (edgeId: string) => void;
+  removeHighlightedEdge: (edgeId: string) => void;
+  clearAllAnimations: () => void;
   
   toggleSection: (section: string) => void;
   
@@ -178,6 +194,11 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   simulationResults: null,
   showAddComponentModal: false,
   addComponentType: null,
+  simulationAnimations: {
+    talkingBubbles: new Set(),
+    processingGears: new Set(),
+    highlightedEdges: new Set(),
+  },
   expandedSections: ['environments', 'agents'],
   
   // Canvas actions
@@ -211,6 +232,89 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   setSimulationResults: (results) => set({ simulationResults: results }),
   setShowAddComponentModal: (show) => set({ showAddComponentModal: show }),
   setAddComponentType: (type) => set({ addComponentType: type }),
+  
+  // Animation actions
+  addTalkingBubble: (nodeId) => {
+    const { simulationAnimations } = get();
+    const newBubbles = new Set(simulationAnimations.talkingBubbles);
+    newBubbles.add(nodeId);
+    set({
+      simulationAnimations: {
+        ...simulationAnimations,
+        talkingBubbles: newBubbles
+      }
+    });
+  },
+  
+  removeTalkingBubble: (nodeId) => {
+    const { simulationAnimations } = get();
+    const newBubbles = new Set(simulationAnimations.talkingBubbles);
+    newBubbles.delete(nodeId);
+    set({
+      simulationAnimations: {
+        ...simulationAnimations,
+        talkingBubbles: newBubbles
+      }
+    });
+  },
+  
+  addProcessingGear: (nodeId) => {
+    const { simulationAnimations } = get();
+    const newGears = new Set(simulationAnimations.processingGears);
+    newGears.add(nodeId);
+    set({
+      simulationAnimations: {
+        ...simulationAnimations,
+        processingGears: newGears
+      }
+    });
+  },
+  
+  removeProcessingGear: (nodeId) => {
+    const { simulationAnimations } = get();
+    const newGears = new Set(simulationAnimations.processingGears);
+    newGears.delete(nodeId);
+    set({
+      simulationAnimations: {
+        ...simulationAnimations,
+        processingGears: newGears
+      }
+    });
+  },
+  
+  addHighlightedEdge: (edgeId) => {
+    const { simulationAnimations } = get();
+    const newEdges = new Set(simulationAnimations.highlightedEdges);
+    newEdges.add(edgeId);
+    set({
+      simulationAnimations: {
+        ...simulationAnimations,
+        highlightedEdges: newEdges
+      }
+    });
+  },
+  
+  removeHighlightedEdge: (edgeId) => {
+    const { simulationAnimations } = get();
+    const newEdges = new Set(simulationAnimations.highlightedEdges);
+    newEdges.delete(edgeId);
+    set({
+      simulationAnimations: {
+        ...simulationAnimations,
+        highlightedEdges: newEdges
+      }
+    });
+  },
+  
+  clearAllAnimations: () => {
+    set({
+      simulationAnimations: {
+        talkingBubbles: new Set(),
+        processingGears: new Set(),
+        highlightedEdges: new Set(),
+      }
+    });
+  },
   
   toggleSection: (section) => {
     const { expandedSections } = get();
@@ -248,11 +352,73 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   
   // Simulation
   runSimulation: async () => {
+    const { nodes, edges, addTalkingBubble, removeTalkingBubble, addProcessingGear, removeProcessingGear, addHighlightedEdge, removeHighlightedEdge, clearAllAnimations } = get();
+    
     set({ isSimulationRunning: true });
+    clearAllAnimations();
     
     try {
-      // For demo, simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Create animation timeline for 5 seconds
+      const actorNodes = nodes.filter(node => node.type === 'actor');
+      const toolNodes = nodes.filter(node => node.type === 'tool');
+      const availableEdges = edges.map(edge => edge.id);
+      
+      // Random animation scheduler
+      const animationIntervals: NodeJS.Timeout[] = [];
+      
+      // Schedule random talking bubbles for actors
+      for (let i = 0; i < 8; i++) {
+        const timeout = setTimeout(() => {
+          if (actorNodes.length > 0) {
+            const randomActor = actorNodes[Math.floor(Math.random() * actorNodes.length)];
+            addTalkingBubble(randomActor.id);
+            
+            // Remove bubble after 1-2 seconds
+            setTimeout(() => {
+              removeTalkingBubble(randomActor.id);
+            }, 1000 + Math.random() * 1000);
+          }
+        }, Math.random() * 4500);
+        animationIntervals.push(timeout);
+      }
+      
+      // Schedule random processing gears for tools
+      for (let i = 0; i < 6; i++) {
+        const timeout = setTimeout(() => {
+          if (toolNodes.length > 0) {
+            const randomTool = toolNodes[Math.floor(Math.random() * toolNodes.length)];
+            addProcessingGear(randomTool.id);
+            
+            // Remove gear after 1.5-2.5 seconds
+            setTimeout(() => {
+              removeProcessingGear(randomTool.id);
+            }, 1500 + Math.random() * 1000);
+          }
+        }, Math.random() * 4500);
+        animationIntervals.push(timeout);
+      }
+      
+      // Schedule random edge highlights
+      for (let i = 0; i < 10; i++) {
+        const timeout = setTimeout(() => {
+          if (availableEdges.length > 0) {
+            const randomEdge = availableEdges[Math.floor(Math.random() * availableEdges.length)];
+            addHighlightedEdge(randomEdge);
+            
+            // Remove highlight after 0.8-1.5 seconds
+            setTimeout(() => {
+              removeHighlightedEdge(randomEdge);
+            }, 800 + Math.random() * 700);
+          }
+        }, Math.random() * 4500);
+        animationIntervals.push(timeout);
+      }
+      
+      // Wait for 5 seconds simulation duration
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      // Clear all intervals
+      animationIntervals.forEach(interval => clearTimeout(interval));
       
       const mockResults = {
         success: true,
@@ -286,6 +452,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     } catch (error) {
       console.error('Simulation failed:', error);
     } finally {
+      clearAllAnimations();
       set({ isSimulationRunning: false });
     }
   }

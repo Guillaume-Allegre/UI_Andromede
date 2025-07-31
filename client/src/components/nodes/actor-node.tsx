@@ -1,7 +1,8 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { User, Bot, ServerCog, Users, Bus } from 'lucide-react';
+import { User, Bot, ServerCog, Users, Bus, MessageCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { useWorkflowStore } from '@/store/workflow-store';
 import type { NodeData } from '@/types/workflow';
 
 const iconMap = {
@@ -19,11 +20,15 @@ const colorMap = {
 };
 
 interface ActorNodeProps {
+  id: string;
   data: NodeData;
   selected?: boolean;
 }
 
-export const ActorNode = memo(({ data, selected }: ActorNodeProps) => {
+export const ActorNode = memo(({ id, data, selected }: ActorNodeProps) => {
+  const { simulationAnimations } = useWorkflowStore();
+  const hasTalkingBubble = simulationAnimations.talkingBubbles.has(id);
+  
   const IconComponent = iconMap[data.icon as keyof typeof iconMap] || User;
   const colorClass = colorMap[data.color as keyof typeof colorMap] || colorMap.blue;
 
@@ -32,6 +37,15 @@ export const ActorNode = memo(({ data, selected }: ActorNodeProps) => {
       selected ? 'ring-2 ring-primary' : ''
     }`}>
       <Handle type="target" position={Position.Left} className="w-3 h-3" />
+      
+      {/* Talking Bubble Animation */}
+      {hasTalkingBubble && (
+        <div className="absolute -top-2 -left-2 animate-bounce">
+          <div className="bg-blue-500 text-white rounded-full p-1 shadow-lg">
+            <MessageCircle className="w-4 h-4" />
+          </div>
+        </div>
+      )}
       
       <div className="flex items-center space-x-3">
         <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClass}`}>
