@@ -104,6 +104,17 @@ The architecture prioritizes developer experience with fast builds, type safety,
 
 ## Recent Changes
 
+### Migration to Replit (July 31, 2025)
+- Successfully migrated project from Replit Agent to Replit environment
+- Set up PostgreSQL database with complete schema migration
+- Fixed TypeScript configuration and dependencies
+- Implemented full database storage with Drizzle ORM
+- Added comprehensive demo data seeding
+- Updated UI terminology: "Run Simulation" → "Run Evaluation", "Save Scenario" → "Save Models"
+- Added retrain functionality with red gear animation for agent retraining
+- Implemented conditional properties panel that only opens when component is selected
+- Enhanced animation system to support both evaluation and retrain workflows
+
 ### Database Migration (July 31, 2025)
 - Successfully migrated from in-memory storage to PostgreSQL database
 - Implemented DatabaseStorage class with full Drizzle ORM integration

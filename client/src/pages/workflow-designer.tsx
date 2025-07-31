@@ -10,7 +10,8 @@ export default function WorkflowDesigner() {
   const { 
     showAddComponentModal, 
     setShowAddComponentModal, 
-    addComponentType 
+    addComponentType,
+    selectedNode
   } = useWorkflowStore();
 
   return (
@@ -22,7 +23,7 @@ export default function WorkflowDesigner() {
         <CanvasArea />
       </div>
       
-      <PropertiesPanel />
+      {selectedNode && <PropertiesPanel />}
       <SimulationModal />
       <AddComponentModal 
         isOpen={showAddComponentModal}

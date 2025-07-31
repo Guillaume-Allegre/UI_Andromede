@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { User, Bot, ServerCog, Users, Bus, MessageCircle } from 'lucide-react';
+import { User, Bot, ServerCog, Users, Bus, MessageCircle, Settings } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useWorkflowStore } from '@/store/workflow-store';
 import type { NodeData } from '@/types/workflow';
@@ -28,6 +28,7 @@ interface ActorNodeProps {
 export const ActorNode = memo(({ id, data, selected }: ActorNodeProps) => {
   const { simulationAnimations } = useWorkflowStore();
   const hasTalkingBubble = simulationAnimations.talkingBubbles.has(id);
+  const hasRetrainGear = simulationAnimations.retrainGears.has(id);
   
   const IconComponent = iconMap[data.icon as keyof typeof iconMap] || User;
   const colorClass = colorMap[data.color as keyof typeof colorMap] || colorMap.blue;
@@ -43,6 +44,15 @@ export const ActorNode = memo(({ id, data, selected }: ActorNodeProps) => {
         <div className="absolute -top-2 -left-2 animate-bounce">
           <div className="bg-blue-500 text-white rounded-full p-1 shadow-lg">
             <MessageCircle className="w-4 h-4" />
+          </div>
+        </div>
+      )}
+      
+      {/* Retrain Gear Animation */}
+      {hasRetrainGear && data.actorType === 'agent' && (
+        <div className="absolute -top-2 -right-2 animate-spin">
+          <div className="bg-red-500 text-white rounded-full p-1 shadow-lg">
+            <Settings className="w-4 h-4" />
           </div>
         </div>
       )}
