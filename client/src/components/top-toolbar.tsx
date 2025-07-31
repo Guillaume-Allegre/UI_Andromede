@@ -23,7 +23,8 @@ export function TopToolbar() {
     isSimulationRunning,
     setShowAddComponentModal,
     setAddComponentType,
-    nodes
+    nodes,
+    runRetrain
   } = useWorkflowStore();
 
   const [showRetrainDialog, setShowRetrainDialog] = useState(false);
@@ -32,9 +33,11 @@ export function TopToolbar() {
   const [selectedReward, setSelectedReward] = useState('');
 
   const handleTabClick = (tab: typeof tabs[0]) => {
+    console.log('Tab clicked:', tab);
     setActiveTab(tab.id);
     setAddComponentType(tab.nodeType);
     setShowAddComponentModal(true);
+    console.log('Modal should now be shown');
   };
 
   // Get agents and rewards from current nodes
@@ -48,14 +51,10 @@ export function TopToolbar() {
     { value: 'federated', label: 'Federated Learning' }
   ];
 
-  const handleRetrain = () => {
+  const handleRetrain = async () => {
     if (selectedRetrainMethod && selectedAgent && selectedReward) {
-      console.log('Starting retrain with:', {
-        method: selectedRetrainMethod,
-        agent: selectedAgent,
-        reward: selectedReward
-      });
       setShowRetrainDialog(false);
+      await runRetrain(selectedAgent, selectedRetrainMethod, selectedReward);
       // Reset form
       setSelectedRetrainMethod('');
       setSelectedAgent('');
@@ -99,7 +98,7 @@ export function TopToolbar() {
             disabled={isSimulationRunning}
           >
             <Play className="w-4 h-4 mr-2" />
-            {isSimulationRunning ? 'Running...' : 'Run Simulation'}
+            {isSimulationRunning ? 'Running...' : 'Run Evaluation'}
           </Button>
 
           {/* Retrain Dialog */}
@@ -199,7 +198,7 @@ export function TopToolbar() {
 
           <Button size="sm">
             <Save className="w-4 h-4 mr-2" />
-            Save Scenario
+            Save Models
           </Button>
         </div>
       </div>

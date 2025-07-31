@@ -103,6 +103,8 @@ export function AddComponentModal({ isOpen, onClose, componentType }: AddCompone
     description: ''
   });
 
+  console.log('AddComponentModal render - isOpen:', isOpen, 'componentType:', componentType);
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -110,7 +112,11 @@ export function AddComponentModal({ isOpen, onClose, componentType }: AddCompone
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submitted with data:', formData);
+    console.log('Component type:', componentType);
+    
     if (!formData.name || !formData.type) {
+      console.log('Validation failed - missing name or type');
       return; // Basic validation
     }
 
@@ -147,7 +153,9 @@ export function AddComponentModal({ isOpen, onClose, componentType }: AddCompone
       data: nodeData
     };
 
+    console.log('About to add node:', newNode);
     addNode(newNode);
+    console.log('Node added successfully');
 
     // Reset form and close modal
     setFormData({
@@ -184,7 +192,7 @@ export function AddComponentModal({ isOpen, onClose, componentType }: AddCompone
           <div>
             <Label htmlFor="type" className="text-sm font-medium">Type *</Label>
             <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
-              <SelectTrigger className="mt-1">
+              <SelectTrigger className="mt-1" id="type">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
