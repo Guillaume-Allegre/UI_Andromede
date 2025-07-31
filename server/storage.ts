@@ -124,7 +124,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProject(id: string): Promise<boolean> {
     const result = await db.delete(projects).where(eq(projects.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Environments
@@ -153,7 +153,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteEnvironment(id: string): Promise<boolean> {
     const result = await db.delete(environments).where(eq(environments.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Scenarios
@@ -167,7 +167,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createScenario(insertScenario: InsertScenario): Promise<Scenario> {
-    const [scenario] = await db.insert(scenarios).values(insertScenario).returning();
+    const [scenario] = await db.insert(scenarios).values([insertScenario]).returning();
     return scenario;
   }
 
@@ -182,7 +182,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteScenario(id: string): Promise<boolean> {
     const result = await db.delete(scenarios).where(eq(scenarios.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Tools
@@ -211,7 +211,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTool(id: string): Promise<boolean> {
     const result = await db.delete(tools).where(eq(tools.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Agents
@@ -225,7 +225,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAgent(insertAgent: InsertAgent): Promise<Agent> {
-    const [agent] = await db.insert(agents).values(insertAgent).returning();
+    const [agent] = await db.insert(agents).values([insertAgent]).returning();
     return agent;
   }
 
@@ -240,7 +240,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAgent(id: string): Promise<boolean> {
     const result = await db.delete(agents).where(eq(agents.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Simulation Runs
@@ -254,7 +254,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSimulationRun(insertRun: InsertSimulationRun): Promise<SimulationRun> {
-    const [run] = await db.insert(simulationRuns).values(insertRun).returning();
+    const [run] = await db.insert(simulationRuns).values([insertRun]).returning();
     return run;
   }
 
